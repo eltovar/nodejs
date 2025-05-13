@@ -1,21 +1,59 @@
 const express = require('express');
 const path = require('path');
-const indexRouter = require('./routes/index');
+const bodyParser = require('body-parser');
+const { WebhookClient } = require('dialogflow-fulfillment');
+
 
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 3000;
 
-// Serve static files from the "public" directory
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
 
-// Use the router for handling routes
-app.use('/', indexRouter);
+app.use(
+    bodyParser.urlencoded({
+        extended: true
+    })
+);
 
-// Catch-all route for handling 404 errors
-app.use((req, res, next) => {
-    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
+app.use(bodyParser.json());
+
+
+app.get('/', function (req, res){
+    res.sendFile(path.join(__dirname + '/index.html'));
+});
+
+app.post('/webhook', (req, res) => {
+  console.log("Peticion del Webhook en DialogFlow", req.body);
+  var speech =
+  req.body.queryResult &&
+  req.body.queryResult.parameters &&
+  req.body.queryResult.parameters.echoText
+    ? req.body.queryResult.parameters.echoText
+    : "Seems like some problem. Speak again.Body: ${json.stringify(req.body)}";
+  return res.json({
+
+  "fulfillmentText": speech,
+  "fulfillmentMessages": [
+    {
+      "text": {
+        "text": [speech]
+      }
+    }
+  ],
+  "source": "<webhookpn1>"
+
+
   });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
-});
+    //Logica para procesar el webhook de DialogFlow
+
+
+
+
+  });
+
+
+app.listen(port, () => {
+    // Imprime un mensaje en la consola indicando que el servidor está corriendo y la dirección en la que se puede acceder.
+    console.log(`Servidor corriendo en http://localhost:${port}`);
+});//puerto de escucha
